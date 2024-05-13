@@ -5,6 +5,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <style>
+  @font-face {
+      font-family: 'Font';
+      src: url('ziti.otf') format('truetype');
+  }
+
+</style>
+  <style>
     #popup {
       display: none;
       position: fixed;
@@ -58,8 +65,8 @@
       background-size: cover;
     }
     video {
-      width: 960;
-      height: 640;
+      width: 300px;
+      height: 200px;
       box-sizing: border-box;
       border-radius: 5px;
       padding: 0;
@@ -123,20 +130,24 @@
     margin: 0 20px;
   }
 
+
   #timer {
     margin-bottom: 20px; /* 调整这个值来改变间距 */
   }
 </style>
+
+
+
 </head>
 <body>
-  <div class="copy">发送这个网址给你的朋友并开始battle吧</div>
-  <div id="container" style="display: flex; flex-direction: row; background-color: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 10px; box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px; padding: 20px;">
+  <div class="copy" >发送这个网址给你的朋友并开始battle吧</div>
+  <div id="container" style="display: flex; flex-direction: row;background-color: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 10px; box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px 0px; padding: 20px;">
   <div id="video-and-couter-container" style="text-align: left;">
     <div id="localCounter" class="counter">0</div>
     <video id="localVideo" autoplay muted></video>
   </div>
   <div id="timer-and-button-container" style="text-align: center;">
-    <time id="timer">00:00</time>
+    <time id="timer">0</time>
     <input type="text" id="inputTime" placeholder="请输入时间（秒）">
     <button id="startButton">开始battle</button>
   </div>

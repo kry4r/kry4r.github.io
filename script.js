@@ -14,9 +14,24 @@ const configuration = {
 };
 let room;
 let pc;
+let ws = null;
+let offer = false;
+let answer = false;
+let offer_send = false;
 
+function captureFrame(video) {
+    // 设置canvas尺寸与视频帧相同
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
+    // 将当前视频帧绘制到canvas上
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+    // 获取图像数据
+    let imageData = canvas.toDataURL('image/png');
+
+    return imageData;
+}
 
 
 
@@ -26,9 +41,18 @@ function onError(error) {
 };
 function startTimer(time) {
     timer = setInterval(function() {
-        if(time <= 0) {
+        if(time == 0) {
             clearInterval(timer);
-            alert('时间到');
+            let alertstring = "时间到,";
+            if(parseInt(document.getElementById("localCounter").textContent) > parseInt(document.getElementById("remoteCounter").textContent)) {
+                alertstring += "我方胜出";
+            } else if(parseInt(document.getElementById("localCounter").textContent) < parseInt(document.getElementById("remoteCounter").textContent)) {
+                alertstring += "对方胜出";
+            }
+            else {
+                alertstring += "平局";
+            }
+            alert(alertstring);
         } else {
             time--;
             document.getElementById('timer').textContent = time;
@@ -53,12 +77,8 @@ drone.on('open', error => {
         const isOfferer = members.length === 2;
         startWebRTC(isOfferer);
     });
-
-    room.on('data', (message, client) => {
+    room.on('data', (message) => {
     // 消息是我们发送的
-    if (client.id === drone.clientId) {
-        return;
-    }
 
     if (message.startTimer) {
         // 设置计时的总时间
@@ -70,7 +90,20 @@ drone.on('open', error => {
         // 开始计时
         startTimer(time);
     }
+
+    if(!offer) {
+        if (message.localCounter) {
+            // 将数据转换为整数
+            let intValue = parseInt(message.localCounter);
+            console.log(intValue);
+
+            // 设置remoteCounter的值
+            document.getElementById('remoteCounter').textContent = intValue;
+        }
+    }
+
     });
+
 });
 
 // 通过 Scaledrone 发送信令数据
@@ -80,6 +113,9 @@ function sendMessage(message) {
         message
     });
 }
+
+
+
 
 function startWebRTC(isOfferer) {
     pc = new RTCPeerConnection(configuration);
@@ -91,19 +127,37 @@ function startWebRTC(isOfferer) {
         }
     };
 
-    let ws;
     // 如果用户是 offerer，则让 'negotiationneeded' 事件创建 offer
     if (isOfferer) {
+        //判断是否已经连接上websocket服务器
+        offer = true;
         pc.onnegotiationneeded = () => {
             pc.createOffer().then(localDescCreated).catch(onError);
-            // 创建一个 WebSocket 连接到服务器
-            //ws = new WebSocket('ws://localhost:8080/path');
+            ws = new WebSocket('ws://localhost:8080/path');
+
+
+            // 当从服务器接收到数据时，处理数据
+            ws.onmessage = function(event) {
+                let data = event.data;
+                // 假设服务器发送的是一个整数值
+                // 如果接收到的消息是 'start_receiving'，则设置 isReceiving 为 true
+                if (data === 'start_receiving') {
+                    isReceiving = true;
+                    return;
+                }
+
+                // 只有在接收到 'start_receiving' 消息后，才开始处理数据
+                if (isReceiving) {
+                    // 假设服务器发送的是一个整数值
+                    let intValue = parseInt(data);
+                    console.log(intValue);
+                    document.getElementById("localCounter").textContent = intValue;
+                }
+            };
+
         }
     }
-    else
-    {
-        //ws = new WebSocket('ws://localhost:8081/path');
-    }
+
 
 
     // 当远程流到达时，在 #remoteVideo 元素中显示它
@@ -130,7 +184,6 @@ function startWebRTC(isOfferer) {
         if (client.id === drone.clientId) {
             return;
         }
-
         if (message.sdp) {
             // 在从另一个对等端接收到 offer 或 answer 后调用此函数
             pc.setRemoteDescription(new RTCSessionDescription(message.sdp), () => {
@@ -157,31 +210,10 @@ function localDescCreated(desc) {
     );
 }
 
-  function showPopup(winner) {
-  var popup = document.getElementById('popup');
-  var winnerText = document.getElementById('winnerText');
-  winnerText.textContent = winner + '胜出！';
-  popup.style.display = 'block';
-
-  // 设置1秒后关闭popup box
-  setTimeout(function() {
-    popup.style.display = 'none';
-  }, 1000); // 1000毫秒后执行，即1秒后
-}
-
-// Set the popup to show after 5 seconds
-setTimeout(function() {
-  // Replace this with your actual condition
-  if (true) {
-    showPopup('我方');
-  } else{
-    showPopup('对方');
-  }
-}, 10000);
-
 
 let timer = null;
 let time = 0;
+let timerId = null;
 document.getElementById('startButton').addEventListener('click', function() {
     // 获取用户输入的时间
     time = document.getElementById('inputTime').value;
@@ -190,7 +222,29 @@ document.getElementById('startButton').addEventListener('click', function() {
     // 通知对方开始计时
     drone.publish({
         room: roomName,
-        message: {startTimer: true, totalTime: time}
+        message: {startTimer: true, totalTime: time,}
     });
+
+    timerId = setInterval(function() {
+        let localCounterValue = document.getElementById('localCounter').textContent;
+        drone.publish({
+            room: roomName,
+            message: {localCounter: localCounterValue}
+        });
+
+        // 检查是否到达设定的时间
+        if (time-- <= 0) {
+            clearInterval(timerId);
+            // 计时结束，发送 'end_receiving' 消息
+            if(offer) {
+                ws.send('end_receiving');
+            }
+        }
+    }, 1000);
+
+    if(offer)
+    {
+        ws.send("start_counter");
+    }
 });
 
