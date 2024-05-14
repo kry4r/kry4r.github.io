@@ -18,6 +18,7 @@ let ws = null;
 let offer = false;
 let answer = false;
 let offer_send = false;
+let answer_send = false;
 
 function captureFrame(video) {
     // 设置canvas尺寸与视频帧相同
@@ -90,6 +91,10 @@ drone.on('open', error => {
         // 开始计时
         startTimer(time);
     }
+    if(message.not_offer)
+    {
+        answer_send= true;
+    }
 
     if(!offer) {
         if (message.localCounter) {
@@ -156,7 +161,35 @@ function startWebRTC(isOfferer) {
             };
 
         }
+
     }
+    else
+        {
+
+            ws = new WebSocket('ws://localhost:8081/path');
+            if(answer_send = true)
+            {
+                ws.send("start_counter");
+            }
+
+            ws.onmessage = function(event) {
+                let data = event.data;
+                // 假设服务器发送的是一个整数值
+                // 如果接收到的消息是 'start_receiving'，则设置 isReceiving 为 true
+                if (data === 'start_receiving') {
+                    isReceiving = true;
+                    return;
+                }
+
+                // 只有在接收到 'start_receiving' 消息后，才开始处理数据
+                if (isReceiving) {
+                    // 假设服务器发送的是一个整数值
+                    let intValue = parseInt(data);
+                    console.log(intValue);
+                    document.getElementById("localCounter").textContent = intValue;
+                }
+            };
+        }
 
 
 
@@ -229,7 +262,7 @@ document.getElementById('startButton').addEventListener('click', function() {
         let localCounterValue = document.getElementById('localCounter').textContent;
         drone.publish({
             room: roomName,
-            message: {localCounter: localCounterValue}
+            message: {localCounter: localCounterValue},
         });
 
         // 检查是否到达设定的时间
@@ -245,6 +278,10 @@ document.getElementById('startButton').addEventListener('click', function() {
     if(offer)
     {
         ws.send("start_counter");
+        drone.publish({
+            room: roomName,
+            message: {not_offer: true},
+        });
     }
 });
 
