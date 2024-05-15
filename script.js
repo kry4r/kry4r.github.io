@@ -166,7 +166,7 @@ function startWebRTC(isOfferer) {
     else
         {
 
-            ws = new WebSocket('ws://localhost:8081/path');
+            ws = new WebSocket('ws://localhost:8080/path');
 
             ws.onmessage = function(event) {
                 let data = event.data;
