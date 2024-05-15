@@ -93,7 +93,7 @@ drone.on('open', error => {
     }
     if(message.not_offer)
     {
-        answer_send= true;
+        ws.send("start_counter");
     }
 
     if(!offer) {
@@ -167,10 +167,6 @@ function startWebRTC(isOfferer) {
         {
 
             ws = new WebSocket('ws://localhost:8081/path');
-            if(answer_send = true)
-            {
-                ws.send("start_counter");
-            }
 
             ws.onmessage = function(event) {
                 let data = event.data;
