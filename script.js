@@ -19,6 +19,7 @@ let offer = false;
 let answer = false;
 let offer_send = false;
 let answer_send = false;
+let isReceiving = false;
 
 function captureFrame(video) {
     // 设置canvas尺寸与视频帧相同
@@ -94,6 +95,7 @@ drone.on('open', error => {
     if(message.not_offer)
     {
         ws.send("start_counter");
+        isReceiving = true;
     }
 
     if (message.localCounter) {
@@ -170,10 +172,7 @@ function startWebRTC(isOfferer) {
                 let data = event.data;
                 // 假设服务器发送的是一个整数值
                 // 如果接收到的消息是 'start_receiving'，则设置 isReceiving 为 true
-                if (data === 'start_receiving') {
-                    isReceiving = true;
-                    return;
-                }
+            
 
                 // 只有在接收到 'start_receiving' 消息后，才开始处理数据
                 if (isReceiving) {
