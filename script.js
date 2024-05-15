@@ -183,6 +183,10 @@ function startWebRTC(isOfferer) {
                     let intValue = parseInt(data);
                     console.log(intValue);
                     document.getElementById("localCounter").textContent = intValue;
+                    drone.publish({
+                        room: roomName,
+                        message: {localCounter: intValue},
+                    });
                 }
             };
         }
