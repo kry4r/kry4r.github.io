@@ -79,9 +79,12 @@ drone.on('open', error => {
         const isOfferer = members.length === 2;
         startWebRTC(isOfferer);
     });
-    room.on('data', (message) => {
+    room.on('data', (message,client) => {
     // 消息是我们发送的
-
+    if (client.id === drone.clientId) {
+        return;
+    }
+        
     if (message.startTimer) {
         // 设置计时的总时间
         let time = parseInt(message.totalTime);
