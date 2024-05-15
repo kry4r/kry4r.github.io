@@ -96,8 +96,7 @@ drone.on('open', error => {
         ws.send("start_counter");
     }
 
-    if(!offer) {
-        if (message.localCounter) {
+    if (message.localCounter) {
             // 将数据转换为整数
             let intValue = parseInt(message.localCounter);
             console.log(intValue);
@@ -105,7 +104,6 @@ drone.on('open', error => {
             // 设置remoteCounter的值
             document.getElementById('remoteCounter').textContent = intValue;
         }
-    }
 
     });
 
