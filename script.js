@@ -143,6 +143,7 @@ function startWebRTC(isOfferer) {
             pc.createOffer().then(localDescCreated).catch(onError);
             ws = new WebSocket('ws://localhost:8080/path');
 
+
             // 当从服务器接收到数据时，处理数据
             ws.onmessage = function(event) {
                 let data = event.data;
@@ -169,6 +170,7 @@ function startWebRTC(isOfferer) {
         {
 
             ws = new WebSocket('ws://localhost:8080/path');
+
             ws.onmessage = function(event) {
                 let data = event.data;
                 // 假设服务器发送的是一个整数值
@@ -278,4 +280,3 @@ document.getElementById('startButton').addEventListener('click', function() {
         });
     }
 });
-
