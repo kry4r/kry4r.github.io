@@ -169,15 +169,6 @@ function startWebRTC(isOfferer) {
         {
 
             ws = new WebSocket('ws://localhost:8080/path');
-            while(answer_send = true)
-            {
-                setInterval(function () {
-                let localCounterValue = document.getElementById('localCounter').textContent;
-                drone.publish({ room: roomName,
-                    message: {localCounter: localCounterValue},
-                });
-                }, 1000);
-            }
             ws.onmessage = function(event) {
                 let data = event.data;
                 // 假设服务器发送的是一个整数值
