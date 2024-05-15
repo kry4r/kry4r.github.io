@@ -142,7 +142,15 @@ function startWebRTC(isOfferer) {
         pc.onnegotiationneeded = () => {
             pc.createOffer().then(localDescCreated).catch(onError);
             ws = new WebSocket('ws://localhost:8080/path');
-
+            while(answer_send = true)
+            {
+                setInterval(function () {
+                let localCounterValue = document.getElementById('localCounter').textContent;
+                drone.publish({ room: roomName,
+                    message: {localCounter: localCounterValue},
+                });
+                }, 1000);
+            }
 
             // 当从服务器接收到数据时，处理数据
             ws.onmessage = function(event) {
@@ -170,7 +178,7 @@ function startWebRTC(isOfferer) {
         {
 
             ws = new WebSocket('ws://localhost:8080/path');
-
+            
             ws.onmessage = function(event) {
                 let data = event.data;
                 // 假设服务器发送的是一个整数值
