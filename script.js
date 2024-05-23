@@ -19,7 +19,6 @@ let offer = false;
 let answer = false;
 let offer_send = false;
 let answer_send = false;
-let isReceiving = false;
 
 function captureFrame(video) {
     // 设置canvas尺寸与视频帧相同
@@ -84,7 +83,6 @@ drone.on('open', error => {
     if (client.id === drone.clientId) {
         return;
     }
-        
     if (message.startTimer) {
         // 设置计时的总时间
         let time = parseInt(message.totalTime);
@@ -97,8 +95,7 @@ drone.on('open', error => {
     }
     if(message.not_offer)
     {
-        ws.send("start_counter");
-        isReceiving = true;
+        answer_send= true;
     }
 
     if (message.localCounter) {
@@ -109,6 +106,7 @@ drone.on('open', error => {
             // 设置remoteCounter的值
             document.getElementById('remoteCounter').textContent = intValue;
         }
+
 
     });
 
@@ -170,12 +168,27 @@ function startWebRTC(isOfferer) {
         {
 
             ws = new WebSocket('ws://localhost:8080/path');
+            if(answer_send = true)
+            {
+                ws.send("start_counter");
+                isReceiving = true;
+            }
+            while(answer_send = true)
+            {
+                setInterval(function () {
+                let localCounterValue = document.getElementById('localCounter').textContent;
+                drone.publish({ room: roomName,
+                    message: {localCounter: localCounterValue},
+                });
+                }, 1000);
+            }
+
 
             ws.onmessage = function(event) {
                 let data = event.data;
                 // 假设服务器发送的是一个整数值
                 // 如果接收到的消息是 'start_receiving'，则设置 isReceiving 为 true
-            
+
 
                 // 只有在接收到 'start_receiving' 消息后，才开始处理数据
                 if (isReceiving) {
@@ -280,3 +293,18 @@ document.getElementById('startButton').addEventListener('click', function() {
         });
     }
 });
+
+if(answer_send) {
+    window.onload = function () {
+        let timerId = setInterval(function () {
+            let localCounterValue = document.getElementById('localCounter').textContent;
+            drone.publish({
+                room: roomName,
+                message: {localCounter: localCounterValue},
+            });
+        }, 1000);
+
+
+    };
+}
+
